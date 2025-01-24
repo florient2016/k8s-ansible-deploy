@@ -1,0 +1,99 @@
+# This Ansible playbook sets up an Ansible user and installs Kubernetes prerequisites on RHEL9.
+# It performs the following tasks:
+# 1. Updates all packages to the latest version.
+# 2. Ensures the Ansible user exists with a specified password and adds the user to the 'wheel' group.
+# 3. Adds the Ansible user to the sudoers file with no password requirement for sudo commands.
+# 4. Adds the Kubernetes repository to the system.
+# 5. Installs required Kubernetes packages (kubelet, kubeadm, kubectl, docker).
+# 6. Enables and starts the Docker service.
+# 7. Disables SELinux.
+# 8. Disables swap and ensures it remains disabled on boot.
+# 9. Enables net.bridge.bridge-nf-call-iptables and net.ipv4.ip_forward sysctl parameters.
+---
+- name: Setup Ansible user and install Kubernetes prerequisites on RHEL9
+  hosts: all
+  become: yes
+
+  vars:
+    ansible_user: ansible
+    ansible_password: "{{ 'ansible' | password_hash('sha512') }}"
+    k8s_packages:
+      - kubelet
+      - kubeadm
+      - kubectl
+      - docker
+
+  tasks:
+  # Update all packages
+    - name: Update all packages
+      yum:
+        name: '*'
+        state: latest
+
+    - name: Ensure Ansible user exists with password
+      user:
+        name: "{{ ansible_user }}"
+        password: "{{ ansible_password }}"
+        state: present
+        groups: wheel
+        append: yes
+
+    
+    - name: Add Ansible user to sudoers
+      lineinfile:
+        path: /etc/sudoers
+        state: present
+        regexp: '^%wheel'
+        line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+        validate: 'visudo -cf %s'
+
+    - name: Add Kubernetes repository
+      yum_repository:
+        name: kubernetes
+        description: Kubernetes Repository
+        baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+        gpgcheck: yes
+        repo_gpgcheck: yes
+        gpgkey: https://packages.cloud.google.com/yum/doc/yum-key.gpg
+                https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+        enabled: yes
+
+    - name: Install required packages
+      yum:
+        name: "{{ item }}"
+        state: present
+      loop: "{{ k8s_packages }}"
+
+    - name: Enable and start Docker service
+      systemd:
+        name: docker
+        enabled: yes
+        state: started
+
+    - name: Disable SELinux
+      selinux:
+        state: disabled
+
+    - name: Disable swap
+      command: swapoff -a
+      when: ansible_swaptotal_mb > 0
+
+    - name: Ensure swap is disabled on boot
+      lineinfile:
+        path: /etc/fstab
+        regexp: '^\s*([^#\s]+\s+){2}swap\s'
+        state: absent
+
+    - name: Enable net.bridge.bridge-nf-call-iptables
+      sysctl:
+        name: net.bridge.bridge-nf-call-iptables
+        value: 1
+        state: present
+        reload: yes
+
+    - name: Enable net.ipv4.ip_forward
+      sysctl:
+        name: net.ipv4.ip_forward
+        value: 1
+        state: present
+        reload: yes
