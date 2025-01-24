@@ -27,12 +27,12 @@
   tasks:
   # Update all packages
     - name: Update all packages
-      yum:
+      ansible.builtin.yum:
         name: '*'
         state: latest
 
     - name: Ensure Ansible user exists with password
-      user:
+      ansible.builtin.user:
         name: "{{ ansible_user }}"
         password: "{{ ansible_password }}"
         state: present
@@ -41,7 +41,7 @@
 
     
     - name: Add Ansible user to sudoers
-      lineinfile:
+      ansible.builtin.lineinfile:
         path: /etc/sudoers
         state: present
         regexp: '^%wheel'
@@ -49,7 +49,7 @@
         validate: 'visudo -cf %s'
 
     - name: Add Kubernetes repository
-      yum_repository:
+      ansible.builtin.yum_repository:
         name: kubernetes
         description: Kubernetes Repository
         baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
@@ -60,36 +60,36 @@
         enabled: yes
 
     - name: Install required packages
-      yum:
+      ansible.builtin.yum:
         name: "{{ item }}"
         state: present
       loop: "{{ k8s_packages }}"
 
     - name: Enable and start Docker service
-      systemd:
+      ansible.builtin.systemd:
         name: docker
         enabled: yes
         state: started
 
     - name: Disable swap
-      command: swapoff -a
+      ansible.builtin.command: swapoff -a
       when: ansible_swaptotal_mb > 0
 
     - name: Ensure swap is disabled on boot
-      lineinfile:
+      ansible.builtin.lineinfile:
         path: /etc/fstab
         regexp: '^\s*([^#\s]+\s+){2}swap\s'
         state: absent
 
     - name: Enable net.bridge.bridge-nf-call-iptables
-      sysctl:
+      ansible.posix.sysctl:
         name: net.bridge.bridge-nf-call-iptables
         value: 1
         state: present
         reload: yes
 
     - name: Enable net.ipv4.ip_forward
-      sysctl:
+      ansible.posix.sysctl:
         name: net.ipv4.ip_forward
         value: 1
         state: present
