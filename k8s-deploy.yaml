@@ -23,7 +23,7 @@
       - kubeadm
       - kubectl
     required_packages:
-      - podman-docker 
+      - docker-ce 
       - containerd.io 
       - docker-buildx-plugin
       - docker-compose-plugin
@@ -40,6 +40,11 @@
         name: '*'
         state: latest
 
+    - name: uninstall podman-docker
+      ansible.builtin.yum:
+        name: podman-docker
+        state: absent
+        
     - name: Install dnf-plugins-core
       ansible.builtin.yum:
         name: dnf-plugins-core
