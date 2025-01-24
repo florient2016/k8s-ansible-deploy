@@ -23,8 +23,11 @@
       - kubeadm
       - kubectl
     required_packages:
-      - docker
-      - containerd.io
+      - docker-ce 
+      - docker-ce-cli 
+      - containerd.io 
+      - docker-buildx-plugin
+      - docker-compose-plugin
       - yum-utils
       - curl
       - wget
@@ -37,6 +40,15 @@
       ansible.builtin.yum:
         name: '*'
         state: latest
+
+    - name: Install dnf-plugins-core
+      ansible.builtin.yum:
+        name: dnf-plugins-core
+        state: present
+
+    - name: Add Docker repo
+      ansible.builtin.shell: |
+        dnf config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo
 
     - name: Ensure Ansible user exists with password
       ansible.builtin.user:
