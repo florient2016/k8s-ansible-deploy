@@ -1,3 +1,4 @@
+# K8s Deploy Playbook
 # This Ansible playbook sets up an Ansible user and installs Kubernetes prerequisites on RHEL9.
 # It performs the following tasks:
 # 1. Updates all packages to the latest version.
