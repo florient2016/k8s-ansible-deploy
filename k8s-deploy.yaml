@@ -92,8 +92,9 @@
         name: docker
         enabled: yes
         state: started
+      enabled: yes
 
-        - name: Add modules to modules-load.d
+    - name: Add modules to modules-load.d
       ansible.builtin.copy:
         content: |
           overlay
@@ -116,7 +117,7 @@
 
     - name: Apply sysctl params
       ansible.builtin.command: sysctl --system
-      
+
     - name: Disable swap
       ansible.builtin.command: swapoff -a
       when: ansible_swaptotal_mb > 0
