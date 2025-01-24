@@ -71,10 +71,6 @@
         enabled: yes
         state: started
 
-    - name: Disable SELinux
-      selinux:
-        state: disabled
-
     - name: Disable swap
       command: swapoff -a
       when: ansible_swaptotal_mb > 0
