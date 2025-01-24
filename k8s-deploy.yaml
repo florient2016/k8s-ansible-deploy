@@ -22,7 +22,14 @@
       - kubelet
       - kubeadm
       - kubectl
+    required_packages:
       - docker
+      - containerd.io
+      - yum-utils
+      - curl
+      - wget
+      - device-mapper-persistent-data
+      - lvm2
 
   tasks:
   # Update all packages
@@ -63,7 +70,7 @@
       ansible.builtin.yum:
         name: "{{ item }}"
         state: present
-      loop: "{{ k8s_packages }}"
+      loop: "{{ required_packages }}"
 
     - name: Enable and start Docker service
       ansible.builtin.systemd:
@@ -94,3 +101,10 @@
         value: 1
         state: present
         reload: yes
+
+    - name: Install required packages
+      ansible.builtin.yum:
+        name: "{{ item }}"
+        state: present
+        disable_excludes: kubernetes
+      loop: "{{ k8s_packages }}"
