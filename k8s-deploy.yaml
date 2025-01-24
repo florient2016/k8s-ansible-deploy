@@ -92,7 +92,6 @@
         name: docker
         enabled: yes
         state: started
-      enabled: yes
 
     - name: Add modules to modules-load.d
       ansible.builtin.copy:
